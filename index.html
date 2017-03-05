@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>NYT Search</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
+	<script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="newyork.js"></script>
+</head>
+<body>
+<div class="container">
+<div class="row">
+<img src="assets/images/nyt-logo.png" alt="nyt" class="img-responsive center-block" id="logo"/> 
+<div class="panel panel-success">
+      <div class="panel-heading">New York Times Search</div>
+      <div class="panel-body">Panel Content
+   
+	Search Term:<br>
+	<input type="text" name="" id="searchTerm"><br>
+	Number of Records Retrieved:<br>
+	<input type="text" name="" id="number"><br>
+	Start Year (Optional):<br>
+	<input type="text" name="" id="startYear"><br>
+	End Year (Optional):<br>
+	<input type="text" name="" id="endYear"><br>
+	<div id="buttons">
+		<button id="searchBtn">Search</button>
+		<button id="clearBtn">Clear Results</button>
+	</div>
+</div>
+
+
+
+<div id="results-display"></div>
+</div>
+</div>
+</div>
+  
+<script type="text/javascript">
+	
+var searchTerm = "";
+var searchCount = 0;
+var startYear = 0;
+var endYear = 0;
+
+var articleCounter = 0;
+// Add authontication key and connect to API 
+var queryURLBase = "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=074c30265e97430c96c6dd9b6e7688df&q=";
+
+//get info from API
+function runQuery(nyURL,count){
+	$.ajax({
+		url: nyURL,
+		method: 'GET',
+		//execute the below function once done retrieving data
+	}).done(function(NTdata) {
+		console.log(nyURL, NTdata);
+		
+//loop until i is less than count, count is a parameter passed to the function from variable searchCount, searchCount captures the value given by the user
+		for(var i = 0; i < count; i++){
+//articlecounter starts at zero every search, it will be incremented by one with every loop until it reaches the number specified by the user
+			articleCounter++;
+			//define new div to return the results
+			var article = $("<div>");
+			article.attr("id", "article-id-"+articleCounter);
+			$("#results-display").append(article);
+//return the headline
+			if(NTdata.response.docs[i].headline !== 'null'){
+			 	$("#article-id-" + articleCounter).append("<h3> " + articleCounter + " " + NTdata.response.docs[i].headline.main +"</h3>");
+			}
+
+			if(NTdata.response.docs[i].byline && NTdata.response.docs[i].byline.original){
+				$("#article-id-" + articleCounter).append("<h5> " + NTdata.response.docs[i].byline.original + "</h5>");
+			}
+//return the snippet
+			if(NTdata.response.docs[i].snippet){
+				$("#article-id-" + articleCounter).append("<span> " + NTdata.response.docs[i].snippet + "</span>");
+			}
+
+			if(NTdata.response.docs[i].web_url){
+				$("#article-id-" + articleCounter).append("<br>URL: <a href='" + NTdata.response.docs[i].web_url + "'>" + NTdata.response.docs[i].web_url + "</a>");
+			}
+		}
+	});
+}	
+// function executes when button is pressed
+$("#searchBtn").on("click", function() {
+
+	//Empty the section where results to be displayed
+	$("#results-display").empty();
+
+	//Set article count to zero
+	articleCounter = 0;
+
+
+	//Get user inputs from the form and assign to the variables
+	searchTerm = $("#searchTerm").val().trim();
+
+	//Add search term to the url query
+	queryURL = queryURLBase + searchTerm;
+
+
+	searchCount = $("#number").val().trim();
+	startYear = $("#startYear").val().trim();
+	endYear = $("#endYear").val().trim();
+
+	//If user inputs start year then add it to the query
+	if (parseInt(startYear)) {
+    	queryURL = queryURL + "&begin_date=" + startYear + "0101";
+  	}
+
+  	//If user inputs end year then add it to the query
+  	if (parseInt(endYear)) {
+    	queryURL = queryURL + "&end_date=" + endYear + "0101";
+  	}
+
+  	//pass final url query and number of article to the function
+  	runQuery(queryURL,searchCount);
+
+});
+	
+</script>
+</body>
+
+
+</html>
